@@ -28,9 +28,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 var WS_URL = "wss://ws.kraken.com"
@@ -486,6 +487,16 @@ func DecodeSpread(input []interface{}) (*Spread, error) {
 		return nil, err
 	}
 	return spread, nil
+}
+
+type Book struct {
+}
+
+func DecodeBook(data []interface{}) (*Book, error) {
+	// var err error = nil
+	var book *Book = &Book{}
+
+	return book, nil
 }
 
 func parseFloat(input interface{}) (float64, error) {
