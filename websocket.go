@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -133,6 +134,16 @@ func (s *WebSocket) Decode(input []byte) (interface{}, error) {
 			} else {
 				return nil, fmt.Errorf("invalid type for spread event")
 			}
+		case "book":
+			if v, ok := decoded[1].(map[string]interface{}); ok {
+				book, err := DecodeBook(v)
+				if err != nil {
+					return nil, err
+				}
+				return book, nil
+			} else {
+				return nil, fmt.Errorf("invalid type for book event")
+			}
 		default:
 			return nil, fmt.Errorf("unknown channel type: %s", meta.name)
 		}
@@ -174,7 +185,8 @@ func (s *WebSocket) SubscribeBook(ticker string) error {
 		Event: "subscribe",
 		Pair:  []string{ticker},
 		Subscription: map[string]interface{}{
-			"name": "book",
+			"name":  "book",
+			"depth": 25,
 		},
 	}
 	return s.Conn.WriteJSON(&message)
@@ -489,14 +501,80 @@ func DecodeSpread(input []interface{}) (*Spread, error) {
 	return spread, nil
 }
 
-type Book struct {
+type BookValue struct {
+	Price     float64
+	Volume    float64
+	Timestamp float64
 }
 
-func DecodeBook(data []interface{}) (*Book, error) {
-	// var err error = nil
-	var book *Book = &Book{}
+type Book struct {
+	Ask []BookValue
+	Bid []BookValue
+}
+
+func DecodeBook(data map[string]interface{}) (*Book, error) {
+
+	var err error
+	var book = &Book{}
+
+	log.Printf("=== data: %v ===\n", data)
+	for k, v := range data {
+		if values, ok := v.([]interface{}); ok {
+			if k == "as" || k == "a" {
+				book.Ask, err = parseBookArray(values)
+				if err != nil {
+					return nil, err
+				}
+			} else if k == "bs" || k == "b" {
+				book.Bid, err = parseBookArray(values)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			return nil, fmt.Errorf("invalid type for book value")
+		}
+	}
 
 	return book, nil
+}
+
+func parseBookArray(data []interface{}) ([]BookValue, error) {
+
+	var bookSlices = make([]BookValue, 0)
+	for i := range data {
+		if bookValue, ok := data[i].([]interface{}); ok {
+			newValue, err := parseBookValue(bookValue)
+			if err != nil {
+				return nil, err
+			}
+			bookSlices = append(bookSlices, *newValue)
+		} else {
+			return nil, fmt.Errorf("Invalid Book Array")
+		}
+	}
+
+	return bookSlices, nil
+}
+
+func parseBookValue(data []interface{}) (*BookValue, error) {
+
+	var err error
+	var bookValue = &BookValue{}
+	if len(data) < 3 {
+		return nil, fmt.Errorf("Invalid Book Value")
+	}
+	if bookValue.Price, err = parseFloat(data[0]); err != nil {
+		return nil, err
+	}
+	if bookValue.Volume, err = parseFloat(data[1]); err != nil {
+		return nil, err
+	}
+	if bookValue.Timestamp, err = parseFloat(data[2]); err != nil {
+		return nil, err
+	}
+
+	return bookValue, nil
 }
 
 func parseFloat(input interface{}) (float64, error) {
