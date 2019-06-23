@@ -28,7 +28,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -140,6 +139,7 @@ func (s *WebSocket) Decode(input []byte) (interface{}, error) {
 				if err != nil {
 					return nil, err
 				}
+				book.Pair = meta.pair
 				return book, nil
 			} else {
 				return nil, fmt.Errorf("invalid type for book event")
@@ -501,32 +501,43 @@ func DecodeSpread(input []interface{}) (*Spread, error) {
 	return spread, nil
 }
 
-type BookValue struct {
+type Side string
+
+const (
+	Ask Side = "Ask"
+	Bid Side = "Bid"
+)
+
+type Order struct {
 	Price     float64
 	Volume    float64
 	Timestamp float64
 }
 
 type Book struct {
-	Ask []BookValue
-	Bid []BookValue
+	Orders map[Side][]Order
+	Pair   string
 }
 
 func DecodeBook(data map[string]interface{}) (*Book, error) {
 
 	var err error
 	var book = &Book{}
+	book.Orders = map[Side][]Order{
+		Ask: nil,
+		Bid: nil,
+	}
 
-	log.Printf("=== data: %v ===\n", data)
+	// log.Printf("=== data: %v ===\n", data)
 	for k, v := range data {
 		if values, ok := v.([]interface{}); ok {
 			if k == "as" || k == "a" {
-				book.Ask, err = parseBookArray(values)
+				book.Orders[Ask], err = parseBookArray(values)
 				if err != nil {
 					return nil, err
 				}
 			} else if k == "bs" || k == "b" {
-				book.Bid, err = parseBookArray(values)
+				book.Orders[Bid], err = parseBookArray(values)
 				if err != nil {
 					return nil, err
 				}
@@ -539,12 +550,12 @@ func DecodeBook(data map[string]interface{}) (*Book, error) {
 	return book, nil
 }
 
-func parseBookArray(data []interface{}) ([]BookValue, error) {
+func parseBookArray(data []interface{}) ([]Order, error) {
 
-	var bookSlices = make([]BookValue, 0)
+	var bookSlices = make([]Order, 0)
 	for i := range data {
 		if bookValue, ok := data[i].([]interface{}); ok {
-			newValue, err := parseBookValue(bookValue)
+			newValue, err := parseBookOrder(bookValue)
 			if err != nil {
 				return nil, err
 			}
@@ -557,24 +568,24 @@ func parseBookArray(data []interface{}) ([]BookValue, error) {
 	return bookSlices, nil
 }
 
-func parseBookValue(data []interface{}) (*BookValue, error) {
+func parseBookOrder(data []interface{}) (*Order, error) {
 
 	var err error
-	var bookValue = &BookValue{}
+	var order = &Order{}
 	if len(data) < 3 {
 		return nil, fmt.Errorf("Invalid Book Value")
 	}
-	if bookValue.Price, err = parseFloat(data[0]); err != nil {
+	if order.Price, err = parseFloat(data[0]); err != nil {
 		return nil, err
 	}
-	if bookValue.Volume, err = parseFloat(data[1]); err != nil {
+	if order.Volume, err = parseFloat(data[1]); err != nil {
 		return nil, err
 	}
-	if bookValue.Timestamp, err = parseFloat(data[2]); err != nil {
+	if order.Timestamp, err = parseFloat(data[2]); err != nil {
 		return nil, err
 	}
 
-	return bookValue, nil
+	return order, nil
 }
 
 func parseFloat(input interface{}) (float64, error) {
