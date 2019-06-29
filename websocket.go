@@ -60,6 +60,15 @@ func OpenWebSocket() (*WebSocket, error) {
 	}, nil
 }
 
+func (s *WebSocket) Close() {
+	err := s.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	if err != nil {
+		fmt.Println("write close:", err)
+	}
+	s.Conn.Close()
+	s.channels = nil
+}
+
 func (s *WebSocket) Decode(input []byte) (interface{}, error) {
 	// Return nil if there is no input data to decode.
 	if input == nil || len(input) == 0 {
