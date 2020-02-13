@@ -1,12 +1,6 @@
 # krakenapi-go
 
-A Kraken API for Go
-
-## REST API
-
-REST API support is not included yet. The REST API features from
-https://gitlab.com/crankykernel/cryptotrader will be ported over
-soon.
+A Kraken WebSocket API for Go by crankykernel
 
 ## WebSocket Support
 

@@ -189,13 +189,15 @@ func (s *WebSocket) SubscribeTicker(tickers ...string) error {
 	return s.Conn.WriteJSON(&message)
 }
 
-func (s *WebSocket) SubscribeBook(ticker string) error {
+func (s *WebSocket) SubscribeBook(tickers []string, depth int) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
-		Pair:  []string{ticker},
+		// Pair:  []string{ticker},
+		Pair: tickers,
 		Subscription: map[string]interface{}{
-			"name":  "book",
-			"depth": 25,
+			"name": "book",
+			// "depth": 25,
+			"depth": depth,
 		},
 	}
 	return s.Conn.WriteJSON(&message)

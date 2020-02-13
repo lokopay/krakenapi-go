@@ -25,12 +25,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/crankykernel/krakenapi-go"
-	"github.com/spf13/pflag"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/crankykernel/krakenapi-go"
+	"github.com/spf13/pflag"
 )
 
 func main() {
@@ -125,10 +126,10 @@ func RunWebSocket() {
 	}
 
 	ws.SubscribeTicker("XBT/USD", "ETH/USD", "XLM/USD")
-	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
-	ws.SubscribeSpread("XBT/USD")
-	ws.SubscribeSpread("XXBTZUSD")
-	//ws.SubscribeBook("XBT/USD")
+	// ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
+	// ws.SubscribeSpread("XBT/USD")
+	// ws.SubscribeSpread("XXBTZUSD")
+	// ws.SubscribeBook([]string{"XBT/USD", "ETH/USD"}, 100)
 
 	ws.Ping(0)
 
@@ -155,6 +156,8 @@ func RunWebSocket() {
 			fmt.Printf("OHLC: %+v\n", v)
 		case krakenapi.Spread:
 			fmt.Printf("Spread: %+v\n", v)
+		case krakenapi.Book:
+			fmt.Printf("Book: %+v\n", v)
 		default:
 			fmt.Printf("Unknown type: %+v\n", v)
 		}
