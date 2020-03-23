@@ -1,4 +1,4 @@
-module github.com/crankykernel/krakenapi-go
+module github.com/judezhu/krakenapi-go
 
 require (
 	github.com/gorilla/websocket v1.4.0
