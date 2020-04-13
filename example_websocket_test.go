@@ -2,8 +2,9 @@ package krakenapi_test
 
 import (
 	"fmt"
-	"github.com/crankykernel/krakenapi-go"
 	"log"
+
+	"github.com/judezhu/krakenapi-go"
 )
 
 func ExampleSocket() {

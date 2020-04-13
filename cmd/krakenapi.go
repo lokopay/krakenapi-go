@@ -30,7 +30,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/crankykernel/krakenapi-go"
+	"github.com/judezhu/krakenapi-go"
 	"github.com/spf13/pflag"
 )
 
