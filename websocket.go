@@ -526,8 +526,9 @@ type Order struct {
 }
 
 type Book struct {
-	Orders map[Side][]Order
-	Pair   string
+	Orders   map[Side][]Order
+	Pair     string
+	Checksum string
 }
 
 func DecodeBook(data map[string]interface{}) (*Book, error) {
@@ -539,7 +540,6 @@ func DecodeBook(data map[string]interface{}) (*Book, error) {
 		Bid: nil,
 	}
 
-	// log.Printf("=== data: %v ===\n", data)
 	for k, v := range data {
 		if values, ok := v.([]interface{}); ok {
 			if k == "as" || k == "a" {
@@ -552,6 +552,10 @@ func DecodeBook(data map[string]interface{}) (*Book, error) {
 				if err != nil {
 					return nil, err
 				}
+			}
+		} else if value, ok := v.(string); ok {
+			if k == "c" {
+				book.Checksum = value
 			}
 		} else {
 			return nil, fmt.Errorf("invalid type for book value")
